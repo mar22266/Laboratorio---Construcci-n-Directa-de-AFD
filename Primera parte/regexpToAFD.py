@@ -1,19 +1,22 @@
 # Andre Marroquin 22266
 # Rodrigo Mansilla
 # Sergio Orellana 22122
+
+# Importamos las librerías necesarias
 import itertools
 
+# Definimos signos 
 precedence = {"|": 1, ".": 2, "*": 3}
 
-
+# funcion que verifica si es un operador
 def is_operator(c: str) -> bool:
     return c in precedence
 
-
+# funcion que verifica si es un operando 
 def is_operand(c: str) -> bool:
     return c.isalnum() or c == "_" or c == "#"
 
-
+# funcion que inserta operadores de concatenación
 def insert_concatenation_operators(infix: str) -> str:
     result = []
     length = len(infix)
@@ -40,7 +43,7 @@ def insert_concatenation_operators(infix: str) -> str:
 
     return "".join(result)
 
-
+# funcion que convierte la expresión regular a postfijo
 def toPostFix(infixExpression: str) -> str:
     infixExpression = insert_concatenation_operators(infixExpression)
 
@@ -74,7 +77,7 @@ def toPostFix(infixExpression: str) -> str:
 
     return "".join(output)
 
-
+# Clase Nodo encargada de inicializar los valores de los nodos
 class Node:
     def __init__(self, value, left=None, right=None):
         self.value = value
@@ -85,7 +88,7 @@ class Node:
         self.lastpos = set()
         self.position = None
 
-
+# Función que construye el árbol de sintaxis
 def build_syntax_tree(postfix):
     stack = []
     pos_counter = itertools.count(1)
@@ -125,7 +128,7 @@ def build_syntax_tree(postfix):
 
     return stack.pop(), position_symbol_map
 
-
+# funcion que calcula el followpos
 def compute_followpos(node, followpos):
     if node is None:
         return
@@ -141,7 +144,7 @@ def compute_followpos(node, followpos):
     compute_followpos(node.left, followpos)
     compute_followpos(node.right, followpos)
 
-
+# funcion que construye el AFD
 def construct_afd(root, position_symbol_map):
     followpos = {pos: set() for pos in position_symbol_map}
     compute_followpos(root, followpos)
@@ -179,14 +182,14 @@ def construct_afd(root, position_symbol_map):
 
     return states, transitions
 
-
+# funcion que imprime el AFD
 def print_afd(states, transitions):
     print("Estados:", states)
     print("Transiciones:")
     for (state, symbol), next_state in transitions.items():
         print(f"{state} -- {symbol} --> {next_state}")
 
-
+# main del programa
 if __name__ == "__main__":
     regex = input(
         "Ingresa la regexp que deseas convertir a AFD (| - or, * - Cerradura de Kleene): "
