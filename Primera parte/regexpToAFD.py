@@ -86,6 +86,7 @@ class Node:
 def build_syntax_tree(postfix):
     stack = []
     pos_counter = itertools.count(1)
+    position_symbol_map = {}
 
     for char in postfix:
         if char.isalnum() or char == "#":
@@ -93,6 +94,7 @@ def build_syntax_tree(postfix):
             node.position = next(pos_counter)
             node.firstpos.add(node.position)
             node.lastpos.add(node.position)
+            position_symbol_map[node.position] = char  # Mapeamos la posición al símbolo
             stack.append(node)
         elif char == "*":
             child = stack.pop()
@@ -118,7 +120,7 @@ def build_syntax_tree(postfix):
             node.lastpos = left.lastpos | right.lastpos
             stack.append(node)
 
-    return stack.pop()
+    return stack.pop(), position_symbol_map
 
 
 def compute_followpos(node, followpos):
@@ -137,8 +139,8 @@ def compute_followpos(node, followpos):
     compute_followpos(node.right, followpos)
 
 
-def construct_afd(root):
-    followpos = {pos: set() for pos in range(1, max(root.lastpos) + 1)}
+def construct_afd(root, position_symbol_map):
+    followpos = {pos: set() for pos in position_symbol_map}
     compute_followpos(root, followpos)
 
     states = {}
@@ -155,7 +157,10 @@ def construct_afd(root):
 
         symbol_map = {}
         for pos in state:
-            for symbol in root.firstpos:
+            symbol = position_symbol_map.get(
+                pos
+            )  # Obtener el símbolo asociado a la posición
+            if symbol:
                 if symbol not in symbol_map:
                     symbol_map[symbol] = set()
                 symbol_map[symbol] |= followpos.get(pos, set())
@@ -182,6 +187,6 @@ if __name__ == "__main__":
     regex += "#"
     postfix = toPostFix(regex)
     print(postfix)
-    syntax_tree = build_syntax_tree(postfix)
-    states, transitions = construct_afd(syntax_tree)
+    syntax_tree, position_symbol_map = build_syntax_tree(postfix)
+    states, transitions = construct_afd(syntax_tree, position_symbol_map)
     print_afd(states, transitions)
