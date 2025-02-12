@@ -166,6 +166,8 @@ def construct_afd(root, position_symbol_map):
                 symbol_map[symbol] |= followpos.get(pos, set())
 
         for symbol, next_state in symbol_map.items():
+            if symbol == "#":
+                continue
             next_state = frozenset(next_state)
             if next_state and next_state not in state_names:
                 state_queue.append(next_state)
@@ -186,7 +188,7 @@ if __name__ == "__main__":
     regex = "(a|b)*abb"
     regex += "#"
     postfix = toPostFix(regex)
-    print(postfix)
+    # print(postfix)
     syntax_tree, position_symbol_map = build_syntax_tree(postfix)
     states, transitions = construct_afd(syntax_tree, position_symbol_map)
     print_afd(states, transitions)
