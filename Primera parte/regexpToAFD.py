@@ -1,3 +1,6 @@
+# Andre Marroquin 22266
+# Rodrigo Mansilla
+# Sergio Orellana 22122
 import itertools
 
 precedence = {"|": 1, ".": 2, "*": 3}
