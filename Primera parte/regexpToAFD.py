@@ -185,7 +185,9 @@ def print_afd(states, transitions):
 
 
 if __name__ == "__main__":
-    regex = "(a|b)*abb"
+    regex = input(
+        "Ingresa la regexp que deseas convertir a AFD (| - or, * - Cerradura de Kleene): "
+    )
     regex += "#"
     postfix = toPostFix(regex)
     # print(postfix)
