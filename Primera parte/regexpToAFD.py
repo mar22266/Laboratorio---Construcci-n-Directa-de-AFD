@@ -1,17 +1,26 @@
+# Andre Marroquin 22266
+# Rodrigo Mansilla
+# Sergio Orellana 22122
+
+# Importamos las librerías necesarias
 import itertools
 from colorama import Fore, Style
 
+# Definimos signos
 precedence = {"|": 1, ".": 2, "*": 3}
 
 
+# funcion que verifica si es un operador
 def is_operator(c: str) -> bool:
     return c in precedence
 
 
+# funcion que verifica si es un operando
 def is_operand(c: str) -> bool:
     return c.isalnum() or c == "_" or c == "#"
 
 
+# funcion que inserta operadores de concatenación
 def insert_concatenation_operators(infix: str) -> str:
     result = []
     length = len(infix)
@@ -22,14 +31,17 @@ def insert_concatenation_operators(infix: str) -> str:
         if i < length - 1:
             if (
                 (
+                    # Verificar si hay un operando seguido de un operando o un paréntesis
                     is_operand(infix[i])
                     and (is_operand(infix[i + 1]) or infix[i + 1] == "(")
                 )
                 or (
+                    # Verificar si hay un paréntesis seguido de un operando
                     infix[i] == ")"
                     and (is_operand(infix[i + 1]) or infix[i + 1] == "(")
                 )
                 or (
+                    # Verificar si hay un operador seguido de un paréntesis
                     infix[i] == "*"
                     and (is_operand(infix[i + 1]) or infix[i + 1] == "(")
                 )
@@ -39,16 +51,17 @@ def insert_concatenation_operators(infix: str) -> str:
     return "".join(result)
 
 
+# funcion que convierte la expresión regular a postfijo
 def toPostFix(infixExpression: str) -> str:
+    # Insertar operadores de concatenación y creacion de listas de output y operadores
     infixExpression = insert_concatenation_operators(infixExpression)
-
     output = []
     operators = []
 
+    # contador para recorrer la expresión
     i = 0
     while i < len(infixExpression):
         c = infixExpression[i]
-
         if is_operand(c):
             output.append(c)
         elif c == "(":
@@ -73,6 +86,7 @@ def toPostFix(infixExpression: str) -> str:
     return "".join(output)
 
 
+# Clase Nodo encargada de inicializar los valores de los nodos
 class Node:
     def __init__(self, value, left=None, right=None):
         self.value = value
@@ -84,12 +98,14 @@ class Node:
         self.position = None
 
 
+# Función que construye el árbol de sintaxis
 def build_syntax_tree(postfix):
     stack = []
     pos_counter = itertools.count(1)
     position_symbol_map = {}
-
+    # Recorremos la expresión postfija
     for char in postfix:
+        # Si el caracter es un operando se crea un nodo
         if char.isalnum() or char == "#":
             node = Node(char)
             node.position = next(pos_counter)
@@ -97,6 +113,7 @@ def build_syntax_tree(postfix):
             node.lastpos.add(node.position)
             position_symbol_map[node.position] = char
             stack.append(node)
+        # Si el caracter es un * se aplica la cerradura de Kleene
         elif char == "*":
             child = stack.pop()
             node = Node("*", left=child)
@@ -104,6 +121,7 @@ def build_syntax_tree(postfix):
             node.firstpos = child.firstpos
             node.lastpos = child.lastpos
             stack.append(node)
+        # Si el caracter es un punto se aplica la concatenación
         elif char == ".":
             right = stack.pop()
             left = stack.pop()
@@ -112,6 +130,7 @@ def build_syntax_tree(postfix):
             node.firstpos = left.firstpos | (right.firstpos if left.nullable else set())
             node.lastpos = right.lastpos | (left.lastpos if right.nullable else set())
             stack.append(node)
+        # Si el caracter es un | se aplica la union
         elif char == "|":
             right = stack.pop()
             left = stack.pop()
@@ -120,10 +139,11 @@ def build_syntax_tree(postfix):
             node.firstpos = left.firstpos | right.firstpos
             node.lastpos = left.lastpos | right.lastpos
             stack.append(node)
-
+    # Se retorna el nodo y el mapa de posiciones
     return stack.pop(), position_symbol_map
 
 
+# funcion que calcula el followpos
 def compute_followpos(node, followpos):
     if node is None:
         return
@@ -140,6 +160,7 @@ def compute_followpos(node, followpos):
     compute_followpos(node.right, followpos)
 
 
+# funcion que construye el AFD
 def construct_afd(root, position_symbol_map):
     followpos = {pos: set() for pos in position_symbol_map}
     compute_followpos(root, followpos)
@@ -205,6 +226,7 @@ def print_afd(states, transitions, accepting_state):
         )
 
 
+# main del programa
 if __name__ == "__main__":
     regex = input(
         Fore.GREEN
