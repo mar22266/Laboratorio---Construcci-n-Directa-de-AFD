@@ -1,4 +1,5 @@
 import itertools
+from colorama import Fore, Style
 
 precedence = {"|": 1, ".": 2, "*": 3}
 
@@ -94,7 +95,7 @@ def build_syntax_tree(postfix):
             node.position = next(pos_counter)
             node.firstpos.add(node.position)
             node.lastpos.add(node.position)
-            position_symbol_map[node.position] = char  # Mapeamos la posición al símbolo
+            position_symbol_map[node.position] = char
             stack.append(node)
         elif char == "*":
             child = stack.pop()
@@ -148,49 +149,72 @@ def construct_afd(root, position_symbol_map):
     transitions = {}
     state_names = {}
     current_name = itertools.count(ord("A"))
+    accepting_state = None
 
     while state_queue:
         state = state_queue.pop(0)
+        if not state:  # Omitir estado vacío
+            continue
+
         if state not in state_names:
             state_names[state] = chr(next(current_name))
             states[state_names[state]] = state
 
         symbol_map = {}
         for pos in state:
-            symbol = position_symbol_map.get(
-                pos
-            )  # Obtener el símbolo asociado a la posición
-            if symbol:
+            symbol = position_symbol_map.get(pos)
+            if symbol and symbol != "#":  # Filtrar el #
                 if symbol not in symbol_map:
                     symbol_map[symbol] = set()
                 symbol_map[symbol] |= followpos.get(pos, set())
 
         for symbol, next_state in symbol_map.items():
-            if symbol == "#":
-                continue
             next_state = frozenset(next_state)
-            if next_state and next_state not in state_names:
+            if not next_state:  # Omitir estado vacío
+                continue
+
+            if next_state not in state_names:
                 state_queue.append(next_state)
                 state_names[next_state] = chr(next(current_name))
-            transitions[(state_names[state], symbol)] = state_names.get(next_state, "?")
+                states[state_names[next_state]] = next_state
 
-    return states, transitions
+            transitions[(state_names[state], symbol)] = state_names[next_state]
+
+    # Estado de aceptación
+    for state_name, positions in states.items():
+        if any(position_symbol_map.get(pos) == "#" for pos in positions):
+            accepting_state = state_name
+
+    return states, transitions, accepting_state
 
 
-def print_afd(states, transitions):
-    print("Estados:", states)
-    print("Transiciones:")
+def print_afd(states, transitions, accepting_state):
+    print(Fore.CYAN + "\n--- Tabla de Estados ---" + Style.RESET_ALL)
+    for state, positions in states.items():
+        highlight = Fore.YELLOW if state == accepting_state else ""
+        print(f"{highlight}Estado {state}: {sorted(positions)}{Style.RESET_ALL}")
+
+    print(Fore.CYAN + "\n--- Transiciones ---" + Style.RESET_ALL)
     for (state, symbol), next_state in transitions.items():
-        print(f"{state} -- {symbol} --> {next_state}")
+        highlight = Fore.YELLOW if state == accepting_state else ""
+        print(f"{highlight}{state} --({symbol})--> {next_state}{Style.RESET_ALL}")
+
+    if accepting_state:
+        print(
+            Fore.YELLOW + f"\nEstado de aceptación: {accepting_state}" + Style.RESET_ALL
+        )
 
 
 if __name__ == "__main__":
     regex = input(
-        "Ingresa la regexp que deseas convertir a AFD (| - or, * - Cerradura de Kleene): "
+        Fore.GREEN
+        + "Ingresa la regexp que deseas convertir a AFD (| - or, * - Cerradura de Kleene): "
+        + Style.RESET_ALL
     )
     regex += "#"
     postfix = toPostFix(regex)
-    # print(postfix)
     syntax_tree, position_symbol_map = build_syntax_tree(postfix)
-    states, transitions = construct_afd(syntax_tree, position_symbol_map)
-    print_afd(states, transitions)
+    states, transitions, accepting_state = construct_afd(
+        syntax_tree, position_symbol_map
+    )
+    print_afd(states, transitions, accepting_state)
