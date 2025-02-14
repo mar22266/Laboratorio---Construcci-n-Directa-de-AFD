@@ -5,6 +5,8 @@
 # Importamos las librerías necesarias
 import itertools
 from colorama import Fore, Style
+import graphviz
+
 
 # Definimos signos
 precedence = {"|": 1, ".": 2, "*": 3}
@@ -226,6 +228,28 @@ def print_afd(states, transitions, accepting_state):
         )
 
 
+# Función para generar la representación gráfica del AFD
+def visualize_afd(states, transitions, accepting_state):
+    dot = graphviz.Digraph(format="png")
+    dot.attr(rankdir="LR")  # Layout de izquierda a derecha
+
+    # Agregar nodos
+    for state in states:
+        if state == accepting_state:
+            dot.node(
+                state, state, shape="doublecircle", color="blue"
+            )  # Estado de aceptación
+        else:
+            dot.node(state, state, shape="circle")
+
+    # Agregar transiciones
+    for (state, symbol), next_state in transitions.items():
+        dot.edge(state, next_state, label=symbol)
+
+    # Guardar y mostrar el grafo
+    dot.render("grafo_AFD", view=True)
+
+
 # main del programa
 if __name__ == "__main__":
     regex = input(
@@ -240,3 +264,5 @@ if __name__ == "__main__":
         syntax_tree, position_symbol_map
     )
     print_afd(states, transitions, accepting_state)
+
+    visualize_afd(states, transitions, accepting_state)
