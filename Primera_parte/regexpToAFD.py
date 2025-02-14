@@ -6,9 +6,15 @@
 import itertools
 from colorama import Fore, Style
 import graphviz
+import os
 
 
-# Definimos signos
+# Función para sanitizar el nombre de la carpeta
+def sanitize_filename(name):
+    return "".join(c if c.isalnum() or c in ("_", "-") else "_" for c in name)
+
+
+# Definimos las precedencias de los operadores
 precedence = {"|": 1, ".": 2, "*": 3}
 
 
@@ -221,8 +227,12 @@ def print_afd(states, transitions, accepting_states):
         )
 
 
-# Función para generar la representación gráfica del AFD
-def visualize_afd(states, transitions, accepting_states):
+# Función para generar la representación gráfica del AFD en una carpeta específica
+def visualize_afd(states, transitions, accepting_states, regex):
+    sanitized_regex = sanitize_filename(regex)
+    output_dir = f"./Primera_parte/grafos/{sanitized_regex}"
+    os.makedirs(output_dir, exist_ok=True)  # Crear la carpeta si no existe
+
     dot = graphviz.Digraph(format="png")
     dot.attr(rankdir="LR")
 
@@ -235,7 +245,8 @@ def visualize_afd(states, transitions, accepting_states):
     for (state, symbol), next_state in transitions.items():
         dot.edge(state, next_state, label=symbol)
 
-    dot.render("./Primera_parte/grafos/grafo_AFD", view=True)
+    output_path = os.path.join(output_dir, "grafo_AFD")
+    dot.render(output_path, view=True)
 
 
 # Main del programa
@@ -252,4 +263,4 @@ if __name__ == "__main__":
         syntax_tree, position_symbol_map
     )
     print_afd(states, transitions, accepting_states)
-    visualize_afd(states, transitions, accepting_states)
+    visualize_afd(states, transitions, accepting_states, regex)
