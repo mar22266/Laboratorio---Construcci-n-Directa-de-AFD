@@ -7,6 +7,7 @@ import itertools
 from colorama import Fore, Style
 import graphviz
 import os
+import string
 
 
 # Función para sanitizar el nombre de la carpeta
@@ -227,10 +228,84 @@ def print_afd(states, transitions, accepting_states):
         )
 
 
+def print_mini_afd(states, transitions, accepting_states):
+    print(Fore.CYAN + "\n--- Tabla de Estados ---" + Style.RESET_ALL)
+    for state, positions in states.items():
+        highlight = Fore.YELLOW if state in accepting_states else ""
+        print(f"{highlight}Estado {state}: {sorted(positions)}{Style.RESET_ALL}")
+
+    print(Fore.CYAN + "\n--- Transiciones ---" + Style.RESET_ALL)
+    for (state, symbol), next_state in transitions.items():
+        highlight = Fore.YELLOW if state in accepting_states else ""
+        print(f"{highlight}{state} --({symbol})--> {next_state}{Style.RESET_ALL}")
+
+    if accepting_states:
+        print(
+            Fore.YELLOW
+            + f"\nEstados de aceptación: {', '.join(accepting_states)}"
+            + Style.RESET_ALL
+        )
+
+
+def minimize_afd(states, transitions, accepting_states):
+    """Minimiza un AFD utilizando la partición de estados equivalentes."""
+
+    # Paso 1: Inicializar particiones de estados de aceptación y no aceptación
+    P = [set(accepting_states), set(states.keys()) - set(accepting_states)]
+
+    def get_partition(state):
+        """Devuelve el índice de la partición a la que pertenece el estado."""
+        for i, group in enumerate(P):
+            if state in group:
+                return i
+        return None
+
+    # Paso 2: Refinar particiones hasta que sean estables
+    changed = True
+    while changed:
+        changed = False
+        new_P = []
+
+        for group in P:
+            partition_map = {}
+
+            for state in group:
+                signature = tuple(
+                    (symbol, get_partition(transitions.get((state, symbol), None)))
+                    for symbol in sorted(set(sym for _, sym in transitions.keys()))
+                )
+
+                if signature not in partition_map:
+                    partition_map[signature] = set()
+                partition_map[signature].add(state)
+
+            new_P.extend(partition_map.values())
+
+        if new_P != P:
+            P = new_P
+            changed = True
+
+    # Paso 3: Construir nuevo AFD minimizado
+    new_states = {chr(65 + i): group for i, group in enumerate(P)}
+    state_mapping = {
+        state: new_state for new_state, group in new_states.items() for state in group
+    }
+
+    new_transitions = {}
+    for (state, symbol), next_state in transitions.items():
+        new_transitions[(state_mapping[state], symbol)] = state_mapping[next_state]
+
+    new_accepting_states = {
+        new_state for new_state, group in new_states.items() if group & accepting_states
+    }
+
+    return new_states, new_transitions, new_accepting_states
+
+
 # Función para generar la representación gráfica del AFD en una carpeta específica
 def visualize_afd(states, transitions, accepting_states, regex):
     sanitized_regex = sanitize_filename(regex)
-    output_dir = f"./Primera_parte/grafos/{sanitized_regex}"
+    output_dir = f"./Primera_parte/grafos/{sanitized_regex}/direct_AFD"
     os.makedirs(output_dir, exist_ok=True)  # Crear la carpeta si no existe
 
     dot = graphviz.Digraph(format="png")
@@ -246,7 +321,28 @@ def visualize_afd(states, transitions, accepting_states, regex):
         dot.edge(state, next_state, label=symbol)
 
     output_path = os.path.join(output_dir, "grafo_AFD")
-    dot.render(output_path, view=True)
+    dot.render(output_path, view=False)
+
+
+def visualize_minimized_afd(states, transitions, accepting_states, regex):
+    sanitized_regex = sanitize_filename(regex)
+    output_dir = f"./Primera_parte/grafos/{sanitized_regex}/minimize_AFD"
+    os.makedirs(output_dir, exist_ok=True)  # Crear la carpeta si no existe
+
+    dot = graphviz.Digraph(format="png")
+    dot.attr(rankdir="LR")
+
+    for state in states:
+        if state in accepting_states:
+            dot.node(state, state, shape="doublecircle", color="blue")
+        else:
+            dot.node(state, state, shape="circle")
+
+    for (state, symbol), next_state in transitions.items():
+        dot.edge(state, next_state, label=symbol)
+
+    output_path = os.path.join(output_dir, "grafo_mini_AFD")
+    dot.render(output_path, view=False)
 
 
 # Main del programa
@@ -262,5 +358,9 @@ if __name__ == "__main__":
     states, transitions, accepting_states = construct_afd(
         syntax_tree, position_symbol_map
     )
+    minimize_afd(states, transitions, accepting_states)
+
     print_afd(states, transitions, accepting_states)
+
+    visualize_minimized_afd(states, transitions, accepting_states, regex)
     visualize_afd(states, transitions, accepting_states, regex)
