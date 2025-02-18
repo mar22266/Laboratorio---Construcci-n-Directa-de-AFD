@@ -1,7 +1,6 @@
 # Regex to AFD
 
-Este proyecto implementa una herramienta en Python que convierte una expresión regular en un Autómata Finito Determinista (AFD) utilizando el algoritmo de FollowPos. La aplicación procesa la expresión regular en varias etapas: inserción de operadores de concatenación, conversión a notación postfija, construcción del árbol de sintaxis, cálculo de las funciones `firstpos`, `lastpos` y `followpos`, y finalmente, la construcción del AFD.
-
+Este laboratorio implementa una herramienta en Python que convierte una expresión regular en un Autómata Finito Determinista (AFD) utilizando el algoritmo de FollowPos. La aplicación procesa la expresión regular en varias etapas: inserción de operadores de concatenación, conversión a notación postfija, construcción del árbol de sintaxis, cálculo de las funciones `firstpos`, `lastpos` y `followpos`, y finalmente, la construcción del AFD.
 
 ## Descripción
 
@@ -33,3 +32,12 @@ El programa realiza los siguientes pasos:
 - Cálculo de las funciones `firstpos`, `lastpos` y `followpos`.
 - Construcción e impresión de un AFD basado en la expresión regular ingresada.
 
+# Referencias
+
+Turkel, W. J., & Crymble, A. (2012, 17 julio). Manipular cadenas de caracteres en Python. Programming Historian. https://programminghistorian.org/es/lecciones/manipular-cadenas-de-caracteres-en-python
+
+Graphviz. (s. f.). Graphviz. https://graphviz.org/
+
+# Conclusión
+
+Este laboratorio implementa la construcción directa de un AFD basado en árboles de sintaxis y followpos, y su minimización con el algoritmo de partición de estados equivalentes. Además, permite visualizar ambos autómatas y probar cadenas de entrada.

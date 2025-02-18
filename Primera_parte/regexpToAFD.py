@@ -1,7 +1,7 @@
 # Laboratorio - Construcción directa de un AFD a partir de una expresión regular
 # Andre Marroquin 22266
 # Rodrigo Mansilla
-# Sergio Orellana 22122
+# Sergio Orellana 221122
 
 """
 Referencias
