@@ -184,7 +184,7 @@ def construct_afd(root, position_symbol_map):
         symbol_map = {}
         for pos in state:
             symbol = position_symbol_map.get(pos)
-            if symbol and symbol != "#":
+            if symbol and symbol != "#" and symbol != "_":
                 if symbol not in symbol_map:
                     symbol_map[symbol] = set()
                 symbol_map[symbol] |= followpos.get(pos, set())
