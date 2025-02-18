@@ -10,6 +10,18 @@ import os
 import string
 
 
+# Clase Nodo encargada de inicializar los valores de los nodos
+class Node:
+    def __init__(self, value, left=None, right=None):
+        self.value = value
+        self.left = left
+        self.right = right
+        self.nullable = False
+        self.firstpos = set()
+        self.lastpos = set()
+        self.position = None
+
+
 # Función para sanitizar el nombre de la carpeta
 def sanitize_filename(name):
     return "".join(c if c.isalnum() or c in ("_", "-") else "_" for c in name)
@@ -88,18 +100,6 @@ def toPostFix(infixExpression: str) -> str:
         output.append(operators.pop())
 
     return "".join(output)
-
-
-# Clase Nodo encargada de inicializar los valores de los nodos
-class Node:
-    def __init__(self, value, left=None, right=None):
-        self.value = value
-        self.left = left
-        self.right = right
-        self.nullable = False
-        self.firstpos = set()
-        self.lastpos = set()
-        self.position = None
 
 
 # Función que construye el árbol de sintaxis
@@ -209,6 +209,7 @@ def construct_afd(root, position_symbol_map):
     return states, transitions, accepting_states
 
 
+# Función para imprimir el AFD
 def print_afd(states, transitions, accepting_states):
     print(Fore.CYAN + "\n--- Tabla de Estados ---" + Style.RESET_ALL)
     for state, positions in states.items():
@@ -228,6 +229,7 @@ def print_afd(states, transitions, accepting_states):
         )
 
 
+# Función para imprimir el AFD minimizado
 def print_mini_afd(states, transitions, accepting_states):
     print(Fore.CYAN + "\n--- Tabla de Estados ---" + Style.RESET_ALL)
     for state, positions in states.items():
@@ -324,6 +326,7 @@ def visualize_afd(states, transitions, accepting_states, regex):
     dot.render(output_path, view=False)
 
 
+# Función para generar la representación gráfica del AFD minimizado
 def visualize_minimized_afd(states, transitions, accepting_states, regex):
     sanitized_regex = sanitize_filename(regex)
     output_dir = f"./Primera_parte/grafos/{sanitized_regex}/minimize_AFD"
@@ -345,6 +348,31 @@ def visualize_minimized_afd(states, transitions, accepting_states, regex):
     dot.render(output_path, view=False)
 
 
+# Función para procesar cadenas y verificar si son aceptadas por el AFD
+def procesar_cadena(afd_transitions, accepting_states, initial_state, input_string):
+    current_state = initial_state
+
+    for symbol in input_string:
+        if (current_state, symbol) in afd_transitions:
+            current_state = afd_transitions[(current_state, symbol)]
+        else:
+            print(
+                Fore.RED
+                + f"La cadena '{input_string}' NO es aceptada."
+                + Style.RESET_ALL
+            )
+            return False
+
+    if current_state in accepting_states:
+        print(Fore.GREEN + f"La cadena '{input_string}' es aceptada." + Style.RESET_ALL)
+        return True
+    else:
+        print(
+            Fore.RED + f"La cadena '{input_string}' NO es aceptada." + Style.RESET_ALL
+        )
+        return False
+
+
 # Main del programa
 if __name__ == "__main__":
     regex = input(
@@ -358,9 +386,18 @@ if __name__ == "__main__":
     states, transitions, accepting_states = construct_afd(
         syntax_tree, position_symbol_map
     )
-    minimize_afd(states, transitions, accepting_states)
 
-    print_afd(states, transitions, accepting_states)
-
-    visualize_minimized_afd(states, transitions, accepting_states, regex)
     visualize_afd(states, transitions, accepting_states, regex)
+    visualize_minimized_afd(states, transitions, accepting_states, regex)
+
+    while True:
+        test_string = input(
+            Fore.CYAN
+            + "\nIngresa una cadena para probar (o 'salir' para terminar): "
+            + Style.RESET_ALL
+        ).strip()
+
+        if test_string.lower() == "salir":
+            break
+
+        procesar_cadena(transitions, accepting_states, "A", test_string)
